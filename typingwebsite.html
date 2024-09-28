@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Speed Test</title>
+    <style>
+       :root {
+            --primary-bg: #1c1c1c;
+            --secondary-bg: #2e2e2e;
+            --text-color: #f5f5f5;
+            --accent-color: #28a745;
+            --accent-hover: #218838;
+            --input-bg: #4a4a4a;
+            --result-bg: #17a2b8;
+            --error-color: #dc3545;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            background-color: var(--secondary-bg);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            margin: auto;
+        }
+
+        textarea {
+            width: 80%;
+            height: 100px;
+            margin-top: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            font-size: 16px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            resize: vertical;
+        }
+
+        input[type="range"] {
+            width: 300px;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px;
+            font-size: 24px;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 50px;
+            height: 50px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        #resultBox {
+            font-size: 20px;
+            margin-top: 20px;
+            color: var(--text-color);
+            background-color: var(--result-bg);
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        #words {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-color);
+            margin: 20px 0;
+            min-height: 60px;
+            background-color: var(--secondary-bg);
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+
+        .highlight {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .error {
+            color: var(--error-color);
+            font-weight: bold;
+        }
+
+        #progressBar {
+            width: 100%;
+            height: 10px;
+            background-color: var(--input-bg);
+            margin-top: 20px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #progressFill {
+            width: 0%;
+            height: 100%;
+            background-color: var(--accent-color);
+            transition: width 0.1s linear;
+        }
+
+        select {
+            padding: 10px;
+            font-size: 16px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Typing Speed Test</h1>
+    <p>Select difficulty level:</p>
+    <select id="difficultySelect">
+        <option value="easy">Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+        <option value="god">God Level</option>
+    </select>
+    <p>Select how many seconds you want for the test:</p>
+    <input type="range" id="timeRange" min="30" max="120" step="5" value="60">
+    <p id="timeDisplay">60 seconds</p>
+    
+    <div id="words">Words will be displayed here...</div>
+    
+    <textarea id="input" placeholder="Start typing here to begin the test..."></textarea><br><br>
+    
+    <button id="resetBtn" style="display:none;">↻</button><br><br>
+    
+    <div id="progressBar"><div id="progressFill"></div></div>
+    
+    <div id="resultBox"></div>
+</div>
+
+<script>
+    const inputField = document.getElementById("input");
+    const resultBox = document.getElementById("resultBox");
+    const wordsDisplay = document.getElementById("words");
+    const timeRange = document.getElementById("timeRange");
+    const timeDisplay = document.getElementById("timeDisplay");
+    const resetBtn = document.getElementById("resetBtn");
+    const progressFill = document.getElementById("progressFill");
+    const difficultySelect = document.getElementById("difficultySelect");
+
+    const wordLists = {
+        easy: [
+            "cat", "dog", "run", "jump", "play", "eat", "sleep", "walk", "talk", "smile",
+            "laugh", "cry", "sing", "dance", "read", "write", "draw", "paint", "cook", "bake"
+        ],
+        medium: [
+            "computer", "keyboard", "mouse", "monitor", "speaker", "headphone", "microphone", "camera",
+            "software", "hardware", "network", "internet", "website", "browser", "program",
+            "code", "algorithm", "data", "system", "database", "server", "client"
+        ],
+        hard: [
+            "algorithm", "cryptocurrency", "cybersecurity", "artificial", "intelligence", "machine", "learning",
+            "quantum", "computing", "blockchain", "virtualization", "containerization", "microservices",
+            "scalability", "redundancy", "encryption", "authentication", "authorization", "optimization"
+        ],
+        god: [
+            "pneumonoultramicroscopicsilicovolcanoconiosis", "hippopotomonstrosesquippedaliophobia",
+            "supercalifragilisticexpialidocious", "floccinaucinihilipilification",
+            "antidisestablishmentarianism", "honorificabilitudinitatibus", "thyroparathyroidectomized",
+            "dichlorodifluoromethane", "incomprehensibilities", "sesquipedalian"
+        ]
+    };
+
+    let allWords = [];
+    let currentSetIndex = 0;
+    let timer;
+    let selectedTime = 60;
+    let typingStarted = false;
+    let startTime;
+    let totalTypedWords = 0;
+
+    function updateTimeDisplay() {
+        timeDisplay.innerText = `${timeRange.value} seconds`;
+        selectedTime = parseInt(timeRange.value);
+    }
+
+    function generateWords() {
+        const difficulty = difficultySelect.value;
+        const wordList = wordLists[difficulty];
+        allWords = Array.from({ length: 1000 }, () => wordList[Math.floor(Math.random() * wordList.length)]);
+        currentSetIndex = 0;
+        updateWordsDisplay();
+    }
+
+    function updateWordsDisplay() {
+        const currentWords = allWords.slice(currentSetIndex, currentSetIndex + 8).join(' ');
+        wordsDisplay.innerHTML = currentWords;
+    }
+
+    function startTest() {
+        typingStarted = true;
+        startTime = Date.now();
+        timer = setInterval(updateProgress, 100);
+        resetBtn.style.display = "none";
+        totalTypedWords = 0;
+    }
+
+    function updateProgress() {
+        const elapsedTime = (Date.now() - startTime) / 1000;
+        const progress = (elapsedTime / selectedTime) * 100;
+        progressFill.style.width = `${Math.min(progress, 100)}%`;
+
+        if (elapsedTime >= selectedTime) {
+            clearInterval(timer);
+            calculateSpeed();
+        }
+    }
+
+    function calculateSpeed() {
+        const typedText = inputField.value.trim();
+        const currentTypedWords = typedText.split(/\s+/).length;
+        const totalWords = totalTypedWords + currentTypedWords;
+
+        const typingSpeed = (totalWords / selectedTime) * 60;
+
+        resultBox.innerHTML = `
+            <p>Your typing speed: <strong>${typingSpeed.toFixed(2)} WPM</strong></p>
+        `;
+        resultBox.style.display = "block";
+        inputField.disabled = true;
+        resetBtn.style.display = "inline-block";
+    }
+
+    function resetTest() {
+        clearInterval(timer);
+        progressFill.style.width = "0%";
+        inputField.value = "";
+        resultBox.style.display = "none";
+        resetBtn.style.display = "none";
+        inputField.disabled = false;
+        typingStarted = false;
+        totalTypedWords = 0;
+        generateWords();
+        inputField.focus();
+    }
+
+    function updateHighlight() {
+        const currentWords = allWords.slice(currentSetIndex, currentSetIndex + 8);
+        const typedText = inputField.value.trim();
+        const typedWords = typedText.split(/\s+/);
+
+        const highlightedWords = currentWords.map((word, index) => {
+            let highlighted = "";
+            const typedWord = typedWords[index] || "";
+
+            for (let i = 0; i < word.length; i++) {
+                if (i < typedWord.length) {
+                    if (typedWord[i] === word[i]) {
+                        highlighted += `<span class="highlight">${word[i]}</span>`;
+                    } else {
+                        highlighted += `<span class="error">${word[i]}</span>`;
+                    }
+                } else {
+                    highlighted += word[i];
+                }
+            }
+            return highlighted;
+        }).join(' ');
+
+        wordsDisplay.innerHTML = highlightedWords;
+
+        if (typedWords.length >= currentWords.length && typedWords[typedWords.length - 1] === currentWords[currentWords.length - 1]) {
+            totalTypedWords += currentWords.length;
+            currentSetIndex += currentWords.length;
+            inputField.value = '';
+            updateWordsDisplay();
+        }
+    }
+
+    inputField.addEventListener("input", () => {
+        if (!typingStarted) {
+            startTest();
+        }
+        updateHighlight();
+    });
+
+    timeRange.addEventListener("input", updateTimeDisplay);
+    resetBtn.addEventListener("click", resetTest);
+    difficultySelect.addEventListener("change", generateWords);
+
+    // Initialize
+    updateTimeDisplay();
+    generateWords();
+</script>
+
+</body>
+</html>
